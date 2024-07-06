@@ -1,0 +1,3 @@
+/home/sanity/CLionProjects/TextBasedRPG/cmake-build-debug/CMakeFiles/TextBasedRPG.dir
+/home/sanity/CLionProjects/TextBasedRPG/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/sanity/CLionProjects/TextBasedRPG/cmake-build-debug/CMakeFiles/rebuild_cache.dir
