@@ -1,7 +1,6 @@
 #ifndef INVENTORY_H
 #define INVENTORY_H
-
-#define MAX_ITEMS 10
+#define MAX_ITEMS 20
 
 typedef struct {
     char name[50];

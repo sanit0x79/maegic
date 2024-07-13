@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "inventory.h"
@@ -8,16 +9,11 @@ void startGame();
 void playMusic(const char *file);
 void displayIntro();
 void displayInventoryMenu(Inventory* inventory);
-
-const char *swordArt =
-"====)-------------\n";
-
-const char *daggerArt =
-"==)--\n";
+char* loadAsciiArt(const char *filename);
 
 int main(int argc, char* argv[])
 {
-    playMusic("/home/sanity/CLionProjects/TextBasedRPG/content/audio/adventure.mp3");
+
     while (1)
     {
         displayIntro();
@@ -32,6 +28,7 @@ void startGame()
     Inventory inventory;
     initializeInventory(&inventory);
 
+    playMusic("/home/sanity/CLionProjects/TextBasedRPG/content/audio/adventure.mp3");
     char characterName[50];
     printf("What is your character's name? ");
     fgets(characterName, sizeof(characterName), stdin);
@@ -41,8 +38,9 @@ void startGame()
     char choice;
     while (1)
     {
-        printf("Choose an action: (e)xplore, (b)attle, (i)nteract, (q)uit: ");
+        printf("Choose an action: (e)xplore, (b)attle, (i)nventory, (q)uit: ");
         scanf(" %c", &choice);
+        while (getchar() != '\n');
         switch (choice)
         {
             case 'e':
@@ -50,6 +48,7 @@ void startGame()
                 break;
             case 'b':
                 printf("A wild monster appears!\n");
+                playMusic("/home/sanity/CLionProjects/TextBasedRPG/content/audio/battle.mp3");
                 break;
             case 'i':
                 printf("You open your inventory...\n");
@@ -68,18 +67,17 @@ void displayIntro()
 {
     printf("Welcome to Maegic!\n");
     printf("Press S to start the game or Q to quit\n");
-
+    playMusic("/home/sanity/CLionProjects/TextBasedRPG/content/audio/introScreen.mp3");
     char choice;
     while (1) {
         choice = getchar();
-        // Clear the input buffer
         while (getchar() != '\n');
 
         if (choice == 's' || choice == 'S') {
-            return;  // Start the game
+            return;
         } else if (choice == 'q' || choice == 'Q') {
             printf("Quitting...\n");
-            exit(0);  // Properly quit the program
+            exit(0);
         } else {
             printf("Invalid input. Press S to start the game or Q to quit.\n");
         }
@@ -108,7 +106,7 @@ void playMusic(const char *file)
     }
 
     Mix_PlayMusic(music, -1);
-    printf("Playing music: %s\n", file);
+    // printf("Playing music: %s\n", file);
 }
 
 
@@ -128,13 +126,20 @@ void displayInventoryMenu(Inventory* inventory) {
             fgets(itemName, sizeof(itemName), stdin);
             itemName[strcspn(itemName, "\n")] = '\0';
 
+            char filename[60];
+            snprintf(filename, sizeof(filename), "%s.txt", itemName);
+            char *art = NULL;
+
             if (strcmp(itemName, "Sword") == 0)
-                {
-                strcpy(asciiArt, swordArt);
-            if (strcmp(itemName, "Dagger") == 0)
             {
-                strcpy(asciiArt, daggerArt);
+                art = loadAsciiArt("/home/sanity/CLionProjects/TextBasedRPG/content/weapons/sword.txt");
+            } else if (strcmp(itemName, "Dagger") == 0)
+            {
+                art = loadAsciiArt("/home/sanity/CLionProjects/TextBasedRPG/content/weapons/dagger.txt");
             }
+            if (art) {
+                addItem(inventory, itemName, art);
+                free(art);
             } else {
                 printf("Enter ASCII art for the item (end with a single '.' on a new line):\n");
                 int i = 0;
@@ -148,11 +153,12 @@ void displayInventoryMenu(Inventory* inventory) {
                     strcpy(&asciiArt[i], line);
                     i += strlen(line);
                 }
+                addItem(inventory, itemName, asciiArt);
             }
-            addItem(inventory, itemName, asciiArt);
             break;
         }
-        case 'r': {
+        case 'r':
+            {
             int itemIndex;
             printf("Enter item index to remove: ");
             scanf("%d", &itemIndex);
@@ -161,8 +167,33 @@ void displayInventoryMenu(Inventory* inventory) {
             break;
         }
         case 'b':
-            return;  // Return to game
+            return;
         default:
             printf("Invalid choice!\n");
     }
+}
+
+char* loadAsciiArt(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("Failed to open file");
+        return NULL;
+    }
+
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char *buffer = (char*)malloc(fileSize + 1);
+    if (!buffer) {
+        perror("Failed to allocate memory");
+        fclose(file);
+        return NULL;
+    }
+
+    fread(buffer, 1, fileSize, file);
+    buffer[fileSize] = '\0';
+
+    fclose(file);
+    return buffer;
 }
